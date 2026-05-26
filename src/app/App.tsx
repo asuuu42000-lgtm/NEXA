@@ -6750,33 +6750,6 @@ function DashboardView({ onTileClick, onReturnToChat, theme, setTheme }: { onTil
         </div>
         
         <div className="flex items-center gap-5">
-          {/* Icons Toolbar */}
-          <div className="flex items-center gap-4 text-muted-foreground">
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="hover:text-foreground transition-colors cursor-pointer flex items-center justify-center"
-              title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
-            >
-              {theme === "dark" ? <Sun size={18} strokeWidth={1.5} className="text-[#FACC15]" /> : <Moon size={18} strokeWidth={1.5} />}
-            </button>
-            <button
-              onClick={() => { localStorage.removeItem("nexa-authenticated"); window.location.reload(); }}
-              className="hover:text-[#F87171] transition-colors cursor-pointer flex items-center justify-center"
-              title="Log Out"
-            >
-              <LogOut size={18} strokeWidth={1.5} />
-            </button>
-            <button className="hover:text-foreground transition-colors cursor-pointer">
-              <Flag size={18} strokeWidth={1.5} />
-            </button>
-            <button className="hover:text-foreground transition-colors cursor-pointer">
-              <Star size={18} strokeWidth={1.5} />
-            </button>
-            <button className="hover:text-foreground transition-colors cursor-pointer">
-              <Mic size={18} strokeWidth={1.5} />
-            </button>
-          </div>
-          
           {/* Search Box */}
           <div className="h-8 w-64 bg-card border border-border rounded-full flex items-center px-3 focus-within:border-primary transition-all">
             <input 
@@ -6788,9 +6761,27 @@ function DashboardView({ onTileClick, onReturnToChat, theme, setTheme }: { onTil
           </div>
 
           <div className="flex items-center gap-4 text-muted-foreground">
-            {/* User Icon */}
+            {/* AI Icon (Back to Chat) */}
             <button className="hover:text-foreground transition-colors cursor-pointer flex items-center justify-center border border-muted-foreground rounded-full p-1" title="Back to Chat" onClick={onReturnToChat}>
               <Bot size={16} strokeWidth={1.5} />
+            </button>
+
+            {/* Theme Toggle Button */}
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="hover:text-foreground transition-colors cursor-pointer flex items-center justify-center"
+              title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+            >
+              {theme === "dark" ? <Sun size={18} strokeWidth={1.5} className="text-[#FACC15]" /> : <Moon size={18} strokeWidth={1.5} />}
+            </button>
+
+            {/* Logout Button */}
+            <button
+              onClick={() => { localStorage.removeItem("nexa-authenticated"); window.location.reload(); }}
+              className="hover:text-[#F87171] transition-colors cursor-pointer flex items-center justify-center"
+              title="Log Out"
+            >
+              <LogOut size={18} strokeWidth={1.5} />
             </button>
           </div>
         </div>
