@@ -7098,118 +7098,101 @@ function Sidebar({
   )
 }
 
-// ── Welcome Screen ─────────────────────────────────────────────────────────────
-function WelcomeScreen({ onNavToPanel, chatType = "work" }: { onNavToPanel: (id: PanelType) => void, chatType?: "work" | "employee" }) {
-  const itemsToDisplay = NAV_ITEMS.filter((item) => {
-    if (chatType === "employee") {
-      return ["my-calls", "appointments", "tasks", "service-news"].includes(item.id);
-    } else {
-      return ["all-jobcards", "vehicle-history", "jc-opening"].includes(item.id);
-    }
-  });
-
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center px-8 pb-4">
-      {/* Orb */}
-      <div className="relative w-[76px] h-[76px] mb-7">
-        <div className="absolute inset-0 rounded-full bg-primary/25 blur-2xl scale-[1.8] animate-pulse" />
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/70 to-accent/50 blur-[8px]" />
-        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-primary via-primary to-accent"
-          style={{ boxShadow: "0 0 36px rgba(61,142,240,0.65), 0 0 72px rgba(13,202,240,0.25), inset 0 1px 1px rgba(255,255,255,0.35)" }} />
-      </div>
-
-      {/* Greeting */}
-      <p className="text-[27px] font-black text-foreground font-sans mb-3 text-center leading-tight">
-        How can I assist you today?
-      </p>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-lg">
-        {itemsToDisplay.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onNavToPanel(item.id)}
-            className="flex items-center gap-3 p-4 rounded-2xl border border-border bg-card hover:bg-secondary/30 hover:border-primary/50 hover:shadow-md transition-all text-foreground text-[12px] font-bold uppercase tracking-wider"
-          >
-            <item.icon size={16} className="text-primary" />
-            {item.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-
-
-// ── Face Scanner ─────────────────────────────────────────────────────────────
-function FaceScanner({ onLogin, onClose }: { onLogin: () => void, onClose: () => void }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-      .then(s => { if (videoRef.current) videoRef.current.srcObject = s; })
-      .catch(console.error);
-    const timer = setTimeout(onLogin, 2000);
-    return () => clearTimeout(timer);
-  }, [onLogin]);
-  return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-card p-6 rounded-2xl border border-border shadow-2xl w-full max-w-sm text-center">
-        <h2 className="text-xl font-bold mb-4">Scanning Face...</h2>
-        <div className="aspect-square bg-black rounded-xl overflow-hidden mb-4">
-          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-        </div>
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground">Cancel</button>
-      </div>
-    </div>
-  );
-}
-
 // ── Login Screen ─────────────────────────────────────────────────────────────
-function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => void }) {
-  const [showFaceScanner, setShowFaceScanner] = useState(false)
+interface LoginScreenProps {
+  onLoginSuccess: () => void;
+  theme: "light" | "dark";
+  setTheme: (t: "light" | "dark") => void;
+}
+
+function LoginScreen({ onLoginSuccess, theme, setTheme }: LoginScreenProps) {
+  const [userId, setUserId] = useState("Nexa123345")
+  const [password, setPassword] = useState("XXXXXXXXXX")
+
   return (
-    <div className="flex h-screen w-full bg-background text-foreground">
-      {showFaceScanner && <FaceScanner onLogin={onLoginSuccess} onClose={() => setShowFaceScanner(false)} />}
-      <div className="w-1/2 flex flex-col justify-center items-center bg-card border-r border-border">
-        <h1 className="text-6xl font-serif tracking-widest">NEXA</h1>
-        <div className="absolute bottom-6 left-6 text-xs text-muted-foreground">
-          <p>Version : 16.4  Mode: LIVE</p>
+    <div 
+      className={`flex h-screen w-full overflow-hidden ${theme === "dark" ? "dark bg-[#050505]" : "bg-[#f8f9fa] bg-background"} text-foreground relative`}
+      style={{
+        backgroundImage: theme === "dark" ? 'radial-gradient(ellipse at 50% -20%, rgba(30, 40, 60, 0.35), transparent 70%)' : 'none'
+      }}
+    >
+      {/* Subtle stripe pattern background overlay for dark theme */}
+      {theme === "dark" && (
+        <div 
+          className="absolute inset-0 z-0 opacity-10 pointer-events-none" 
+          style={{ backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(255,255,255,0.05) 4px, rgba(255,255,255,0.05) 8px)' }}
+        />
+      )}
+
+      {/* Left side panel: NEXA wide serif logo and version log */}
+      <div className="w-[43%] hidden md:flex flex-col justify-center items-center bg-[#eaecef] dark:bg-[#0a0a0c] border-r border-[#e4e4e7] dark:border-zinc-800/85 relative select-none h-full shrink-0 z-10 transition-colors duration-300">
+        <h1 className="text-[64px] font-[200] tracking-[0.55em] text-[#0a0a0d] dark:text-neutral-100 uppercase font-serif pl-[0.55em] drop-shadow-sm">NEXA</h1>
+        <div className="absolute bottom-6 left-10 text-[11px] font-[500] tracking-wider text-[#71717a] dark:text-zinc-500 flex gap-5 font-sans uppercase">
+          <span>Version : 16.4</span>
+          <span className="text-[#a1a1aa]/30 dark:text-zinc-800">|</span>
+          <span>Mode: LIVE</span>
         </div>
       </div>
-      <div className="w-1/2 flex flex-col justify-center items-center bg-background px-20">
-        <div className="absolute top-6 right-6 text-xs text-muted-foreground">Designed & Developed by <span className="font-bold">global360</span></div>
-        <div className="bg-card p-6 rounded-full mb-8 border border-border">
-          <User size={48} className="text-primary" />
+
+      {/* Right side panel: Login action container */}
+      <div className="flex-1 flex flex-col justify-center items-center bg-white dark:bg-transparent p-8 md:p-16 relative h-full min-w-0 z-10 transition-colors duration-300">
+        {/* Top Header */}
+        <div className="absolute top-6 right-10 flex items-center gap-6 z-20">
+          <span className="text-[11px] text-[#71717a] dark:text-zinc-500 font-sans select-none hidden sm:inline">
+            Designed & Developed by <span className="font-bold text-[#F26522]">global360</span>
+          </span>
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="w-8 h-8 rounded-full border border-[#e4e4e7] dark:border-zinc-800 flex items-center justify-center bg-transparent hover:bg-neutral-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer text-[#71717a] dark:text-zinc-400 hover:text-[#0a0a0d] dark:hover:text-zinc-100 shadow-sm"
+            title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+          >
+            {theme === "dark" ? <Sun size={15} className="text-[#FACC15]" /> : <Moon size={15} />}
+          </button>
         </div>
-        <div className="w-full max-w-sm space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">User ID</label>
-            <input type="text" className="w-full p-3 bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none" defaultValue="Nexa123345" />
+
+        {/* Profile Avatar */}
+        <div className="w-24 h-24 rounded-full bg-[#EAECEF]/70 dark:bg-[#0a0a0c] flex items-center justify-center mb-8 border border-[#e4e4e7]/55 dark:border-zinc-800/80 shadow-sm transition-all hover:scale-[1.03] duration-300">
+          <User size={38} className="text-[#71717a] dark:text-zinc-400" strokeWidth={1.5} />
+        </div>
+
+        {/* Form elements */}
+        <div className="w-full max-w-sm space-y-5">
+          <div className="space-y-1.5">
+            <label className="block text-[12.5px] font-[500] text-neutral-500 dark:text-zinc-400 ml-1 font-sans">User ID</label>
+            <input 
+              type="text" 
+              value={userId} 
+              onChange={e => setUserId(e.target.value)}
+              className="w-full px-4 py-3 bg-white dark:bg-[#0c0c0e]/80 border border-neutral-300 dark:border-zinc-800 rounded-xl outline-none focus:border-neutral-500 dark:focus:border-zinc-700 text-[14px] text-foreground font-sans transition-all font-semibold shadow-sm focus:ring-1 focus:ring-zinc-800" 
+            />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">Password</label>
-            <input type="password" className="w-full p-3 bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none" defaultValue="XXXXXXXXXX" />
+          <div className="space-y-1.5">
+            <label className="block text-[12.5px] font-[500] text-neutral-500 dark:text-zinc-400 ml-1 font-sans">Password</label>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)}
+              className="w-full px-4 py-3 bg-white dark:bg-[#0c0c0e]/80 border border-neutral-300 dark:border-zinc-800 rounded-xl outline-none focus:border-neutral-500 dark:focus:border-zinc-700 text-[14px] text-foreground font-sans transition-all font-semibold shadow-sm focus:ring-1 focus:ring-zinc-800" 
+            />
           </div>
           <button 
             onClick={onLoginSuccess}
-            className="w-full bg-primary text-primary-foreground p-4 rounded-full font-bold uppercase tracking-widest hover:bg-primary/90 hover:scale-[1.02] transition-all"
+            className="w-full bg-black hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-100 text-white font-bold py-3.5 px-6 rounded-full text-[12.5px] tracking-[0.2em] uppercase transition-all shadow-md active:scale-95 cursor-pointer mt-2"
           >
             LOGIN
           </button>
-          <button
-            onClick={() => setShowFaceScanner(true)}
-            className="w-full border border-border bg-card p-4 rounded-full font-bold uppercase tracking-widest hover:bg-muted hover:border-primary/50 transition-all flex items-center justify-center gap-2"
-          >
-            <Camera size={18} /> FACE ID LOGIN
-          </button>
         </div>
-        <div className="absolute bottom-6 right-6 text-xs text-muted-foreground">UDID: 4B8CF526-786D-4B0B-9383-626BA7062213</div>
+
+        {/* Brand identity footer */}
+        <div className="absolute bottom-6 right-10 text-[10.5px] font-mono tracking-tight text-neutral-400 dark:text-zinc-650 select-none">
+          UDID: 4B8CF526-786D-4B0B-9383-626BA7062213
+        </div>
       </div>
     </div>
   )
 }
 
 
-// ── App ────────────────────────────────────────────────────────────────────────
 export default function App() {
   const [authenticated, setAuthenticated] = useState(() => localStorage.getItem("nexa-authenticated") === "true")
 
@@ -7430,7 +7413,7 @@ export default function App() {
   const [speechError, setSpeechError] = useState<string | null>(null)
   const recognitionRef = useRef<any>(null)
   
-  const [theme, setTheme] = useState<"light" | "dark">("light")
+  const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem("nexa-theme") as "light" | "dark") || "light")
 
   useEffect(() => {
     if (theme === "dark") {
@@ -8079,6 +8062,10 @@ export default function App() {
   ];
 
   const showWelcome = messages.length === 0 && view === "chat"
+
+  if (!authenticated) {
+    return <LoginScreen onLoginSuccess={() => setAuthenticated(true)} theme={theme} setTheme={setTheme} />
+  }
 
   return (
     <div 
