@@ -7430,11 +7430,6 @@ export default function App() {
         const labelText = customSessionLabel || msg.text || "New Conversation"
         await saveChatSession(currentSessId, labelText, activeChatType, isJcCompleted)
         await refreshSessionsList()
-      } else {
-        const firstUserText = messages.find(m => m.role === "user")?.text;
-        const labelText = customSessionLabel || firstUserText || msg.text || "New Conversation"
-        await saveChatSession(currentSessId, labelText, activeChatType, isJcCompleted)
-        await refreshSessionsList()
       }
       
       // Save message document inside subcollection
@@ -8028,9 +8023,58 @@ export default function App() {
       // Hands-free navigation from custom AI responses
       if (data.panel) {
         setActiveDashPanel(data.panel);
-        setView("dashboard");
         if (data.initialData) {
           setActiveDashPanelData(data.initialData);
+        }
+        
+        // Let employee chat users read and converse without being hijacked to the dashboard automatically,
+        // unless they explicitly ask to navigate, view, or open a panel.
+        let isExplicitNav = 
+          upperText.includes("GO TO") || 
+          upperText.includes("SHOW") || 
+          upperText.includes("OPEN PANEL") || 
+          upperText.includes("LAUNCH") || 
+          upperText.includes("NAVIGATE") || 
+          upperText.includes("VIEW") || 
+          upperText.includes("DISPLAY") ||
+          upperText.includes("LOAD") ||
+          upperText.includes("SWITCH TO") ||
+          upperText.includes("MY APPOINT") ||
+          upperText.includes("MY APPIOM") ||
+          upperText.includes("YES") ||
+          upperText.includes("OPEN IT") ||
+          upperText.includes("CONFIRM");
+
+        if (data.panel === "appointments" && (upperText.includes("APPOINTMENT") || upperText.includes("SCHEDULE") || upperText.includes("APPIOMNET"))) {
+          isExplicitNav = true;
+        }
+        if (data.panel === "tasks" && (upperText.includes("TASK") || upperText.includes("TO DO") || upperText.includes("TODO"))) {
+          isExplicitNav = true;
+        }
+        if (data.panel === "my-calls" && (upperText.includes("CALL") || upperText.includes("PHONE") || upperText.includes("CALLBACK"))) {
+          isExplicitNav = true;
+        }
+        if (data.panel === "service-news" && (upperText.includes("NEWS") || upperText.includes("BULLETIN") || upperText.includes("CAMPAIGN"))) {
+          isExplicitNav = true;
+        }
+        if (data.panel === "jc-opening" && (upperText.includes("JOB CARD") || upperText.includes("JC") || upperText.includes("CREATE") || upperText.includes("OPEN"))) {
+          isExplicitNav = true;
+        }
+        if (data.panel === "vehicle-history" && (upperText.includes("HISTORY") || upperText.includes("PAST RECORDS") || upperText.includes("VEHICLE"))) {
+          isExplicitNav = true;
+        }
+        if (data.panel === "all-jobcards" && (upperText.includes("ALL JOB") || upperText.includes("ACTIVE JC"))) {
+          isExplicitNav = true;
+        }
+
+        if (activeChatType !== "employee" || isExplicitNav) {
+          setActiveDashPanel(data.panel);
+          if (data.initialData) {
+            setActiveDashPanelData(data.initialData);
+          }
+          if (data.panel !== "welcome") {
+            setView("dashboard");
+          }
         }
       }
 
@@ -8043,24 +8087,67 @@ export default function App() {
       let matchedPanel: PanelType | undefined = undefined;
       let matchedData: Record<string, unknown> | undefined = undefined;
       
-      if (upperText.includes("HELLO") || upperText.includes("HI")) {
-        fallbackText = "Hello! I am NEXA AI voice-enabled copilot assistant. You can speak to me or type to navigate today's appointments, trigger a vehicle number plate scan, or open a job card.";
-      } else if (upperText.includes("APPOINTMENT")) {
+      if (upperText.includes("HELLO") || upperText.includes("HI") || upperText.includes("HEY") || upperText.includes("HELO") || upperText.includes("GREETING")) {
+        fallbackText = "Hello! How may I help you? Here is what I can do:\n1. Check your **Appointments & schedule** today\n2. Guide you on **how to open/create a Job Card**\n3. Review your **Tasks** or handle **Callbacks**\n4. Access **Suzuki Connect telematics**\n\nTell me, how can I help you today?";
+      } else if (upperText.includes("APPOINTMENT") || upperText.includes("APPIOMNET") || upperText.includes("SCHEDULE")) {
         fallbackText = "Now pulling today's scheduled service appointments database.";
         matchedPanel = "appointments";
-      } else if (upperText.includes("TASK")) {
+      } else if (upperText.includes("TASK") || upperText.includes("TO DO") || upperText.includes("TODO")) {
         fallbackText = "Opening your pending daily tasks audit dashboard.";
         matchedPanel = "tasks";
-      } else if (upperText.includes("CALL")) {
+      } else if (upperText.includes("CALL") || upperText.includes("RESPONSE") || upperText.includes("PHONE") || upperText.includes("CALLBACK")) {
         fallbackText = "Loading scheduled callback queues and customer query response logs.";
         matchedPanel = "my-calls";
+      } else if (upperText.includes("NEWS") || upperText.includes("BULLETIN") || upperText.includes("CAMPAIGN")) {
+        fallbackText = "Displaying the latest NEXA service news, bulletins, and mandatory campaign updates.";
+        matchedPanel = "service-news";
       }
 
       addBotMessageSync(fallbackText, matchedPanel, matchedData);
       
       if (matchedPanel) {
         setActiveDashPanel(matchedPanel);
-        setView("dashboard");
+        let isExplicitNav = 
+          upperText.includes("GO TO") || 
+          upperText.includes("SHOW") || 
+          upperText.includes("OPEN PANEL") || 
+          upperText.includes("LAUNCH") || 
+          upperText.includes("NAVIGATE") || 
+          upperText.includes("VIEW") || 
+          upperText.includes("DISPLAY") ||
+          upperText.includes("LOAD") ||
+          upperText.includes("SWITCH TO") ||
+          upperText.includes("MY APPOINT") ||
+          upperText.includes("MY APPIOM") ||
+          upperText.includes("YES") ||
+          upperText.includes("OPEN IT") ||
+          upperText.includes("CONFIRM");
+
+        if (matchedPanel === "appointments" && (upperText.includes("APPOINTMENT") || upperText.includes("SCHEDULE") || upperText.includes("APPIOMNET"))) {
+          isExplicitNav = true;
+        }
+        if (matchedPanel === "tasks" && (upperText.includes("TASK") || upperText.includes("TO DO") || upperText.includes("TODO"))) {
+          isExplicitNav = true;
+        }
+        if (matchedPanel === "my-calls" && (upperText.includes("CALL") || upperText.includes("PHONE") || upperText.includes("CALLBACK"))) {
+          isExplicitNav = true;
+        }
+        if (matchedPanel === "service-news" && (upperText.includes("NEWS") || upperText.includes("BULLETIN") || upperText.includes("CAMPAIGN"))) {
+          isExplicitNav = true;
+        }
+        if (matchedPanel === "jc-opening" && (upperText.includes("JOB CARD") || upperText.includes("JC") || upperText.includes("CREATE") || upperText.includes("OPEN"))) {
+          isExplicitNav = true;
+        }
+        if (matchedPanel === "vehicle-history" && (upperText.includes("HISTORY") || upperText.includes("PAST RECORDS") || upperText.includes("VEHICLE"))) {
+          isExplicitNav = true;
+        }
+        if (matchedPanel === "all-jobcards" && (upperText.includes("ALL JOB") || upperText.includes("ACTIVE JC"))) {
+          isExplicitNav = true;
+        }
+
+        if (activeChatType !== "employee" || isExplicitNav) {
+          setView("dashboard");
+        }
         if (matchedData) {
           setActiveDashPanelData(matchedData);
         }
@@ -8187,6 +8274,9 @@ export default function App() {
     if (activeChatType !== "work") {
       setActiveDashPanel(id)
       setActiveDashPanelData(data)
+      if (id !== "welcome") {
+        setView("dashboard")
+      }
     } else {
       if (id !== "jc-opening") {
         setActiveWorkPanel(id)

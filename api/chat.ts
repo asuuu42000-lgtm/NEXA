@@ -1,31 +1,34 @@
-import express from "express";
-import path from "path";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+export default async function handler(req: any, res: any) {
+  // Allow both POST and OPTIONS (for CORS)
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    return res.status(200).end();
+  }
 
-  app.use(express.json());
+  if (req.method !== "POST") {
+    return res.status(405).json({ panel: null, botText: "Method Not Allowed" });
+  }
 
-  // API route for Chatbot
-  app.post("/api/chat", async (req, res) => {
-    try {
-      const ai = new GoogleGenAI({ 
-        apiKey: process.env.GEMINI_API_KEY,
-        httpOptions: {
-          headers: {
-            'User-Agent': 'aistudio-build',
-          }
+  try {
+    const ai = new GoogleGenAI({ 
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
         }
-      });
-      const { prompt, chatHistory = [], activeContext = {}, chatType = "work" } = req.body;
-      
-      const isEmployeeChat = chatType === "employee";
-      
-      const systemInstruction = isEmployeeChat 
-        ? `You are the NEXA Advisor Employee Personal AI Assistant, a dedicated helpful digital champion for Maruti Suzuki NEXA workshop advisors and technicians.
+      }
+    });
+
+    const { prompt, chatHistory = [], activeContext = {}, chatType = "work" } = req.body;
+    
+    const isEmployeeChat = chatType === "employee";
+    
+    const systemInstruction = isEmployeeChat 
+      ? `You are the NEXA Advisor Employee Personal AI Assistant, a dedicated helpful digital champion for Maruti Suzuki NEXA workshop advisors and technicians.
 Your goal is to guide the employee with their daily personal schedule, and answer help queries like 'how do I do this' by rendering high-quality, friendly, easy-to-read step-by-step instructions.
 
 LIVE WORKSHOP DATABASE:
@@ -63,11 +66,10 @@ REPRESENTATIVE HELP TOPICS / RECURRING PROCEDURES:
    2. Click the telephone button to simulate the call. After ending, select the disposition (Scheduled, Completed) to log.
 
 Behavior instructions:
-1. Personally address the employee as a friendly colleague. If the user says a greeting (like 'hi', 'hey', 'hello', 'good morning', 'good afternoon'), do NOT map to any specific dashboard panel (return "panel": null) and respond precisely with a warm message like: "Hello! How may I help you? Here is what I can do:\n1. Check your **Appointments & schedule** today\n2. Guide you on **how to open/create a Job Card**\n3. Review your **Tasks** or **Callbacks**\n4. Access **Suzuki Connect telematics**\n\nTell me, how can I help you today?"
-2. If asked about appointments or schedule, list today's scheduled arrivals clearly from the LIVE WORKSHOP DATABASE with exact times, vehicle registers, and status, and set "panel": "appointments".
-3. If asked any operational question (e.g. "how to open job card", "how do I run diagnostics", "how to see history"), list the exact step-by-step procedures in numbered markdown bullets! Then conclude your response by asking: "Would you like to open this screen for you, or do you need more help?" Do NOT set the "panel" variable in the JSON response; wait for the user to explicitly confirm navigation in their next message.
-4. If the user explicitly confirms (e.g., "yes", "open it"), map to the appropriate panel (e.g., "jc-opening" for job card, "vehicle-history" for history) based on the context of the previous operational guidance provided, and set that "panel" in the JSON response.
-5. Respond ONLY with a standard JSON object. Do NOT include markdown code-blocks (\`\`\`json ...) or trailing/leading metadata comments.
+1. Personally address the employee as a friendly colleague.
+2. If asked about appointments or schedule, list today's scheduled arrivals clearly from the LIVE WORKSHOP DATABASE with exact times, vehicle registers, and status.
+3. If asked any operational question (e.g. "how to open job card", "how do I run diagnostics", "how to see history"), list the exact step-by-step procedures in numbered markdown bullets!
+4. Respond ONLY with a standard JSON object. Do NOT include markdown code-blocks (\`\`\`json ...) or trailing/leading metadata comments.
 
 Response Format:
 {
@@ -75,7 +77,7 @@ Response Format:
   "botText": "Hi there! I would be glad to help. Here is the step-by-step procedure:\\n1. Step 1...\\n2. Step 2...",
   "initialData": null
 }`
-        : `You are the NEXA Advisor AI Chatbot, an expert digital assistant for NEXA Service Workshops.
+      : `You are the NEXA Advisor AI Chatbot, an expert digital assistant for NEXA Service Workshops.
 Your role is to classify the Service Advisor's natural inputs into appropriate actions and panel workspaces on the dashboard, and extract dynamic context like vehicle registration numbers (e.g. HR26CW7677) where available to speed up their workflow.
 
 LIVE WORKSHOP DATABASE:
@@ -137,42 +139,22 @@ Response Format:
     "regNo": "extracted-clean-registration-or-null"
   }
 }`;
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: prompt,
-        config: {
-          systemInstruction: systemInstruction,
-          responseMimeType: "application/json",
-        }
-      });
 
-      const dataStr = response.text?.trim() || "{}";
-      res.json(JSON.parse(dataStr));
-    } catch (e: any) {
-      console.error(e);
-      res.status(500).json({ panel: null, botText: "Error communicating with AI: " + e.message });
-    }
-  });
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+      }
+    });
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*all', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+    const dataStr = response.text?.trim() || "{}";
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", "application/json");
+    res.status(200).json(JSON.parse(dataStr));
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ panel: null, botText: "Error communicating with AI: " + e.message });
   }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
 }
-
-startServer();
