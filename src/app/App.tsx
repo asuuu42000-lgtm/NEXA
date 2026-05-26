@@ -8376,6 +8376,7 @@ export default function App() {
                       </div>
                     </div>
                   )}
+
                   {/* Welcome or chat messages */}
                   <AnimatePresence mode="wait">
                     {loadingChat ? (
@@ -8436,27 +8437,6 @@ export default function App() {
                   {activeChatType !== "work" && (
                     <div className="shrink-0 px-6 pb-5 pt-3 border-t border-border/20 bg-transparent backdrop-blur-md">
                       <div className="max-w-3xl mx-auto flex flex-col">
-                        {/* Quick Access Actions inside the chat view area */}
-                        {activeChatType === "employee" && (
-                        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-3 pt-1">
-                          <button onClick={() => handleQuickAction("my-calls")}
-                            className="shrink-0 px-3 py-1.5 flex items-center gap-1.5 text-[11.5px] font-semibold bg-card/40 border border-border rounded-full hover:bg-primary/20 hover:text-primary transition-colors text-muted-foreground whitespace-nowrap font-sans uppercase tracking-wider font-medium">
-                            <Phone size={13} /> My Calls
-                          </button>
-                          <button onClick={() => handleQuickAction("appointments")}
-                            className="shrink-0 px-3 py-1.5 flex items-center gap-1.5 text-[11.5px] font-semibold bg-card/40 border border-border rounded-full hover:bg-primary/20 hover:text-primary transition-colors text-muted-foreground whitespace-nowrap font-sans uppercase tracking-wider font-medium">
-                            <Calendar size={13} /> Appointments
-                          </button>
-                          <button onClick={() => handleQuickAction("tasks")}
-                            className="shrink-0 px-3 py-1.5 flex items-center gap-1.5 text-[11.5px] font-semibold bg-card/40 border border-border rounded-full hover:bg-primary/20 hover:text-primary transition-colors text-muted-foreground whitespace-nowrap font-sans uppercase tracking-wider font-medium font-bold">
-                            <CheckSquare size={13} /> My Tasks
-                          </button>
-                          <button onClick={() => handleQuickAction("service-news")}
-                            className="shrink-0 px-3 py-1.5 flex items-center gap-1.5 text-[11.5px] font-semibold bg-card/40 border border-border rounded-full hover:bg-primary/20 hover:text-primary transition-colors text-muted-foreground whitespace-nowrap font-sans uppercase tracking-wider font-medium">
-                            <Newspaper size={13} /> Service News
-                          </button>
-                        </div>
-                      )}
 
                       {isScanningInChat && (
                         <div className="mb-3.5 bg-background rounded-2xl border border-dashed border-primary/30 p-1 overflow-hidden shadow-2xl">
@@ -8544,7 +8524,7 @@ export default function App() {
                                 {[
                                   { label: "🎙️ Open Job Card for DL6CR1517", val: "Open Job Card for DL6CR1517" },
                                   { label: "🔬 Check vehicle history for HR26DS6144", val: "Check vehicle history for HR26DS6144" },
-                                  { label: "📅 Show today's scheduled appointments", val: "Show today's scheduled appointments" },
+                                  { label: "📅 Show today's scheduled appointments", val: "Show today's scheduled appointments font-bold" },
                                   { label: "✅ Review pending tasks", val: "Review pending tasks" }
                                 ].map((cmd, i) => (
                                   <button
@@ -8573,13 +8553,13 @@ export default function App() {
                           <button onClick={() => setAttachedFile(null)} className="text-muted-foreground hover:text-white p-0.5 rounded cursor-pointer shrink-0"><X size={12} /></button>
                         </div>
                       )}
-                      <div className="flex items-center gap-2 bg-card rounded-2xl border border-border focus-within:border-primary/35 transition-all px-4 py-3 shadow-lg shadow-black/20">
+                      <div className="flex items-center gap-2 bg-card rounded-2xl border border-border focus-within:border-primary/35 transition-all px-4 py-3 shadow-lg shadow-black/20 font-bold">
                         <input
                           value={input}
                           onChange={e => setInput(e.target.value)}
                           onKeyDown={e => e.key === "Enter" && handleSend()}
                           placeholder="Ask or speak to open a job card, fetch vehicle history, check appointments..."
-                          className="flex-1 bg-transparent outline-none text-foreground text-[13px] placeholder:text-muted-foreground font-sans"
+                          className="flex-1 bg-transparent outline-none text-foreground text-[13px] placeholder:text-muted-foreground font-sans font-semibold"
                         />
                         <div className="flex items-center gap-1.5">
                           <button 
@@ -8603,59 +8583,10 @@ export default function App() {
                             <Camera size={14} className={isScanningInChat ? "text-primary scale-110" : "text-muted-foreground"} />
                           </button>
                           <button onClick={handleSend} disabled={!input.trim() && !attachedFile}
-                            className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all disabled:opacity-25 disabled:cursor-not-allowed shadow-md shadow-primary/20 cursor-pointer">
+                            className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/95 transition-all disabled:opacity-25 disabled:cursor-not-allowed shadow-md shadow-primary/20 cursor-pointer">
                             <Send size={13} />
                           </button>
                         </div>
-                      </div>
-                      <div className="flex items-center justify-between mt-2 px-1">
-                        <div className="flex gap-4">
-                          <button onClick={() => {
-                            const promptOptions = [
-                              "Open Job Card for DL6CR1517",
-                              "Check vehicle history for HR26DS6144",
-                              "Show today's scheduled appointments",
-                              "Review pending tasks"
-                            ];
-                            const randomPrompt = promptOptions[Math.floor(Math.random() * promptOptions.length)];
-                            setInput(randomPrompt);
-                          }}
-                            className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors font-sans font-semibold cursor-pointer">
-                            <Zap size={11} className="text-primary" /> Saved prompts
-                          </button>
-                          <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors font-sans font-semibold cursor-pointer font-medium font-bold">
-                            <Download size={11} /> Attach file
-                          </button>
-                          <button 
-                            onClick={() => {
-                              const nextVal = !speakResponses;
-                              setSpeakResponses(nextVal);
-                              if (!nextVal && window.speechSynthesis) {
-                                window.speechSynthesis.cancel();
-                              }
-                            }} 
-                            className={`flex items-center gap-1.5 text-[11px] select-none cursor-pointer font-sans font-semibold transition-colors ${speakResponses ? "text-[#4ADE80]" : "text-muted-foreground hover:text-foreground"}`}
-                            title="Toggles reading out loud NEXA response bubbles"
-                          >
-                            {speakResponses ? <Volume2 size={11} className="text-[#4ADE80]" /> : <VolumeX size={11} />}
-                            {speakResponses ? "Voice Out: ON" : "Voice Out: OFF"}
-                          </button>
-                          <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            onChange={e => {
-                              const file = e.target.files?.[0]
-                              if (file) {
-                                const name = file.name
-                                const type = file.type.includes("pdf") ? "pdf" : file.type.includes("image") ? "image" : "other"
-                                setAttachedFile({ name, type })
-                              }
-                              e.target.value = ""
-                            }} 
-                            style={{ display: "none" }} 
-                          />
-                        </div>
-                        <p className="text-[10px] text-muted-foreground/35 font-mono">NEXA Voice Assistant · Offline Link Active</p>
                       </div>
                     </div>
                   </div>
