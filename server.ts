@@ -12,8 +12,12 @@ async function startServer() {
   // API route for Chatbot
   app.post("/api/chat", async (req, res) => {
     try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("GEMINI_API_KEY is not configured.");
+      }
       const ai = new GoogleGenAI({ 
-        apiKey: process.env.GEMINI_API_KEY,
+        apiKey,
         httpOptions: {
           headers: {
             'User-Agent': 'aistudio-build',

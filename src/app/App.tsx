@@ -5744,14 +5744,14 @@ function JCChatStepRenderer({
               <button
                 type="button"
                 onClick={() => setIsCng(true)}
-                className={`px-3.5 py-1 text-[11px] font-bold rounded-full border cursor-pointer transition-all ${isCng ? "bg-secondary border-secondary text-primary-foreground font-extrabold" : "bg-card border-border text-muted-foreground"}`}
+                className={`px-3.5 py-1 text-[11px] font-bold rounded-full border cursor-pointer transition-all ${isCng ? "bg-secondary border-secondary text-primary-foreground font-extrabold" : "bg-card border-border text-foreground hover:bg-muted"}`}
               >
                 Yes
               </button>
               <button
                 type="button"
                 onClick={() => setIsCng(false)}
-                className={`px-3.5 py-1 text-[11px] font-bold rounded-full border cursor-pointer transition-all ${!isCng ? "bg-secondary border-secondary text-primary-foreground font-extrabold" : "bg-card border-border text-muted-foreground"}`}
+                className={`px-3.5 py-1 text-[11px] font-bold rounded-full border cursor-pointer transition-all ${!isCng ? "bg-secondary border-secondary text-primary-foreground font-extrabold" : "bg-card border-border text-foreground hover:bg-muted"}`}
               >
                 No
               </button>
@@ -5821,7 +5821,7 @@ function JCChatStepRenderer({
                     startVideoSimulation();
                   }
                 }} />
-                <Upload size={20} className="text-secondary" />
+                <Upload size={20} className="text-foreground" />
                 <span className="text-[11px] font-bold text-foreground">UPLOAD VIDEO</span>
               </label>
               <button
@@ -6140,19 +6140,19 @@ function JCChatStepRenderer({
       return (
         <div className="mt-3 p-4 bg-card/90 rounded-xl border border-border shadow-xl flex flex-col gap-3 font-sans">
           <div className="p-3 bg-background border border-border rounded-xl flex flex-col gap-2.5">
-            <div className="flex justify-between items-center text-[10px] font-extrabold uppercase text-secondary tracking-widest border-b border-border pb-1.5">
+            <div className="flex justify-between items-center text-[10px] font-extrabold uppercase text-foreground tracking-widest border-b border-border pb-1.5">
               <span>PMS standard items list (DMS pre-loaded)</span>
               <span>ESTIMATED VALUE</span>
             </div>
             {pmsMenu.map((itm) => (
               <div key={itm.code} className="flex justify-between items-center text-[12px]">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-primary/25 border border-primary/30 text-primary-light font-bold">
+                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-foreground/10 border border-foreground/20 text-foreground font-bold">
                     {itm.type}
                   </span>
                   <span className="text-foreground">{itm.desc}</span>
                 </div>
-                <span className="font-mono text-[11.5px] text-muted-foreground">₹{itm.price}</span>
+                <span className="font-mono text-[11.5px] text-foreground">₹{itm.price}</span>
               </div>
             ))}
           </div>
@@ -6298,8 +6298,8 @@ function JCChatStepRenderer({
                 onClick={() => setIsSignCaptured(true)}
                 className="h-24 bg-card hover:bg-[#0A1224] border border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer text-muted-foreground transition-all group"
               >
-                <Wrench size={16} className="text-muted-foreground/50 group-hover:text-secondary group-hover:animate-bounce" />
-                <span className="text-[11px] text-muted-foreground/60 block font-sans">Click to simulate customer signature trace</span>
+                <Wrench size={16} className="text-foreground/50 group-hover:text-secondary group-hover:animate-bounce" />
+                <span className="text-[11px] text-foreground block font-sans">Click to simulate customer signature trace</span>
               </div>
             ) : (
               <div className="h-24 bg-card border border-secondary/25 rounded-xl relative flex justify-center items-center overflow-hidden">
@@ -8911,13 +8911,13 @@ export default function App() {
                   </p>
                   <div className="mt-4 pt-3.5 border-t border-border/60 w-full flex flex-wrap gap-1.5">
                     <span className="text-[10px] font-semibold px-2 py-0.5 bg-secondary/45 border border-border/40 text-muted-foreground/90 rounded-md font-sans">
-                      📷 License Scanning
+                      License Scanning
                     </span>
                     <span className="text-[10px] font-semibold px-2 py-0.5 bg-[#10B981]/15 border border-[#10B981]/25 text-[#10B981] rounded-md font-sans">
-                      📁 Job Cards
+                      Job Cards
                     </span>
                     <span className="text-[10px] font-semibold px-2 py-0.5 bg-secondary/45 border border-border/40 text-muted-foreground/90 rounded-md font-sans">
-                      🚗 Vehicle History
+                      Vehicle History
                     </span>
                   </div>
                 </button>
@@ -8953,13 +8953,13 @@ export default function App() {
                   </p>
                   <div className="mt-4 pt-3.5 border-t border-border/60 w-full flex flex-wrap gap-1.5">
                     <span className="text-[10px] font-semibold px-2 py-0.5 bg-secondary/45 border border-border/40 text-muted-foreground/90 rounded-md font-sans">
-                      📞 Personal Calls
+                      Personal Calls
                     </span>
                     <span className="text-[10px] font-semibold px-2 py-0.5 bg-[#A78BFA]/20 border border-[#A78BFA]/30 text-[#A78BFA] rounded-md font-sans">
-                      📅 Appointments
+                      Appointments
                     </span>
                     <span className="text-[10px] font-semibold px-2 py-0.5 bg-secondary/45 border border-border/40 text-muted-foreground/90 rounded-md font-sans">
-                      👥 My Tasks
+                      My Tasks
                     </span>
                   </div>
                 </button>
