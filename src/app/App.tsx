@@ -7424,6 +7424,7 @@ export default function App() {
       if (!currentSessId) {
         // Create new session ID
         currentSessId = "sess_" + Date.now().toString()
+        activeSessionIdRef.current = currentSessId
         updateActiveSessionId(currentSessId)
         
         // Define label from message text
@@ -7654,7 +7655,7 @@ export default function App() {
 
 
 
-  function startChatJCOpening(regInput = "") {
+  async function startChatJCOpening(regInput = "") {
     const initialSession = {
       step: (regInput ? "CONFIRM_VEHICLE" : "VIN_SCAN") as any,
       regNo: regInput,
@@ -7683,7 +7684,11 @@ export default function App() {
     
     // Assign session ID immediately to transition UI smoothly
     const localSessId = "sess_local_" + Date.now().toString();
+    activeSessionIdRef.current = localSessId;
     updateActiveSessionId(localSessId);
+    
+    await saveChatSession(localSessId, "Job Card Setup: " + (regInput || "New"), activeChatType, false);
+    await refreshSessionsList();
 
     setJcSession(initialSession);
     setTyping(true);
@@ -8250,7 +8255,7 @@ export default function App() {
   }
 
   function handleQuickAction(id: PanelType, data?: Record<string, unknown>) {
-    if (view !== "chat") setView("chat")
+    if (activeChatType === "work" && view !== "chat") setView("chat")
     
     // Clear active temporary standalone panel states
     setActiveWorkPanel(null)
@@ -8271,17 +8276,14 @@ export default function App() {
     addUserMessage(ACTION_LABELS[id] || "Request: " + id)
     addBotMessageSync(BOT_TEXTS[id] || "Opening " + id, id, data)
     
-    if (activeChatType !== "work") {
-      setActiveDashPanel(id)
-      setActiveDashPanelData(data)
-      if (id !== "welcome") {
-        setView("dashboard")
-      }
-    } else {
+    if (activeChatType === "work") {
       if (id !== "jc-opening") {
         setActiveWorkPanel(id)
         setActiveWorkPanelData(data)
       }
+    } else if (activeChatType === "employee") {
+      setActiveDashPanel(id)
+      setActiveDashPanelData(data)
     }
   }
 
@@ -8470,7 +8472,7 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <DashboardView onTileClick={(panel) => setActiveDashPanel(panel)} onReturnToChat={() => setView("chat")} theme={theme} setTheme={setTheme} />
+                <DashboardView onTileClick={(panel) => handleTileClick(panel)} onReturnToChat={() => setView("chat")} theme={theme} setTheme={setTheme} />
               )}
             </motion.div>
           ) : (
