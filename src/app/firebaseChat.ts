@@ -38,9 +38,63 @@ export function isFirebaseEnabled() {
   return hasConfiguredFirebase && auth !== null && db !== null;
 }
 
+// LocalStorage helpers to secure session state and message history
+function getLocalSessions(): ChatSession[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("nexa_local_sessions");
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return arr.map((item: any) => ({
+      ...item,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt)
+    }));
+  } catch (e) {
+    console.error("Failed to parse local sessions:", e);
+    return [];
+  }
+}
+
+function saveLocalSessions(sessions: ChatSession[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("nexa_local_sessions", JSON.stringify(sessions));
+  } catch (e) {
+    console.error("Failed to save local sessions:", e);
+  }
+}
+
+function getLocalMessages(sessionId: string): Message[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(`nexa_local_msg_${sessionId}`);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return arr.map((item: any) => ({
+      ...item,
+      timestamp: new Date(item.timestamp)
+    }));
+  } catch (e) {
+    console.error("Failed to parse local messages:", e);
+    return [];
+  }
+}
+
+function saveLocalMessages(sessionId: string, messages: Message[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`nexa_local_msg_${sessionId}`, JSON.stringify(messages));
+  } catch (e) {
+    console.error("Failed to save local messages:", e);
+  }
+}
+
 // 1. Fetch all chat sessions for the current authenticated user or guest fallback
 export async function fetchChatSessions(): Promise<ChatSession[]> {
-  if (!isFirebaseEnabled()) return [];
+  if (!isFirebaseEnabled()) {
+    return getLocalSessions().sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
   const user = await ensureAuth();
   const userId = user ? user.uid : getStableGuestId();
 
@@ -67,14 +121,16 @@ export async function fetchChatSessions(): Promise<ChatSession[]> {
     });
     return sessions;
   } catch (err) {
-    handleFirestoreError(err, OperationType.LIST, path);
-    return [];
+    console.warn("Firestore fetch failed, falling back to localStorage:", err);
+    return getLocalSessions().sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 }
 
 // 2. Fetch all messages for a specific session
 export async function fetchChatMessages(sessionId: string): Promise<Message[]> {
-  if (!isFirebaseEnabled()) return [];
+  if (!isFirebaseEnabled()) {
+    return getLocalMessages(sessionId);
+  }
   await ensureAuth();
 
   const path = `chat_sessions/${sessionId}/messages`;
@@ -97,13 +153,38 @@ export async function fetchChatMessages(sessionId: string): Promise<Message[]> {
     });
     return messages;
   } catch (err) {
-    handleFirestoreError(err, OperationType.LIST, path);
-    return [];
+    console.warn("Firestore messages fetch failed, falling back to localStorage:", err);
+    return getLocalMessages(sessionId);
   }
 }
 
 // 3. Create or update session metadata
 export async function saveChatSession(sessionId: string, label: string, chatType: "work" | "employee" = "work", isCompleted?: boolean): Promise<void> {
+  const now = new Date();
+  
+  // Save locally first to guarantee persistence
+  const localSess = getLocalSessions();
+  const existingIdx = localSess.findIndex(s => s.id === sessionId);
+  if (existingIdx === -1) {
+    localSess.push({
+      id: sessionId,
+      label: label.substring(0, 80) || "New Conversation",
+      createdAt: now,
+      updatedAt: now,
+      userId: getStableGuestId(),
+      chatType,
+      isCompleted: isCompleted || false
+    });
+  } else {
+    localSess[existingIdx].label = label.substring(0, 80);
+    localSess[existingIdx].updatedAt = now;
+    localSess[existingIdx].chatType = chatType;
+    if (isCompleted !== undefined) {
+      localSess[existingIdx].isCompleted = isCompleted;
+    }
+  }
+  saveLocalSessions(localSess);
+
   if (!isFirebaseEnabled()) return;
   const user = await ensureAuth();
   const userId = user ? user.uid : getStableGuestId();
@@ -112,7 +193,6 @@ export async function saveChatSession(sessionId: string, label: string, chatType
   try {
     const docRef = doc(db, path, sessionId);
     const docSnap = await getDoc(docRef);
-    const now = new Date();
     
     if (!docSnap.exists()) {
       await setDoc(docRef, {
@@ -136,12 +216,30 @@ export async function saveChatSession(sessionId: string, label: string, chatType
       await updateDoc(docRef, updatePayload);
     }
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `${path}/${sessionId}`);
+    console.warn("Failed to write session to Firestore, saved to local storage:", err);
   }
 }
 
 // 4. Save/Update a single message inside a chat session
 export async function saveChatMessage(sessionId: string, msg: Message): Promise<void> {
+  // Update local message subcollection
+  const localMsgs = getLocalMessages(sessionId);
+  const existingMsgIdx = localMsgs.findIndex(m => m.id === msg.id);
+  if (existingMsgIdx === -1) {
+    localMsgs.push(msg);
+  } else {
+    localMsgs[existingMsgIdx] = msg;
+  }
+  saveLocalMessages(sessionId, localMsgs);
+
+  // Update touch timestamp of parent local session
+  const localSess = getLocalSessions();
+  const parentIdx = localSess.findIndex(s => s.id === sessionId);
+  if (parentIdx !== -1) {
+    localSess[parentIdx].updatedAt = new Date();
+    saveLocalSessions(localSess);
+  }
+
   if (!isFirebaseEnabled()) return;
   await ensureAuth();
 
@@ -167,12 +265,19 @@ export async function saveChatMessage(sessionId: string, msg: Message): Promise<
       updatedAt: new Date(),
     });
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `${path}/${msg.id}`);
+    console.warn("Failed to save message to Firestore, saved to local storage:", err);
   }
 }
 
 // 5. Use user authorization permissions to delete a session and its subcollection messages
 export async function deleteChatSession(sessionId: string): Promise<void> {
+  // Delete from local storage
+  const localSess = getLocalSessions().filter(s => s.id !== sessionId);
+  saveLocalSessions(localSess);
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(`nexa_local_msg_${sessionId}`);
+  }
+
   if (!isFirebaseEnabled()) return;
   await ensureAuth();
 
@@ -191,6 +296,6 @@ export async function deleteChatSession(sessionId: string): Promise<void> {
     // Then delete parent session document
     await deleteDoc(sessionRef);
   } catch (err) {
-    handleFirestoreError(err, OperationType.DELETE, `chat_sessions/${sessionId}`);
+    console.warn("Failed to delete from Firestore, removed from local storage:", err);
   }
 }

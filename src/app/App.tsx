@@ -7098,6 +7098,123 @@ function Sidebar({
   )
 }
 
+// ── Welcome Screen Component ──────────────────────────────────────────────────
+interface WelcomeScreenProps {
+  onNavToPanel: (id: PanelType) => void;
+  chatType: "work" | "employee";
+  theme?: string;
+}
+
+function WelcomeScreen({ onNavToPanel, chatType, theme = "light" }: WelcomeScreenProps) {
+  const employeeCards = [
+    {
+      id: "appointments" as PanelType,
+      title: "APPOINTMENTS",
+      icon: Calendar
+    },
+    {
+      id: "my-calls" as PanelType,
+      title: "MY CALLS",
+      icon: Phone
+    },
+    {
+      id: "tasks" as PanelType,
+      title: "MY TASKS",
+      icon: CheckSquare
+    },
+    {
+      id: "service-news" as PanelType,
+      title: "SERVICE NEWS",
+      icon: Newspaper
+    }
+  ];
+
+  const workCards = [
+    {
+      id: "jc-opening" as PanelType,
+      title: "OPEN JOB CARD",
+      icon: FileText
+    },
+    {
+      id: "vehicle-history" as PanelType,
+      title: "VEHICLE HISTORY",
+      icon: Car
+    },
+    {
+      id: "suzuki-connect-form" as PanelType,
+      title: "SUZUKI CONNECT",
+      icon: Wrench
+    },
+    {
+      id: "all-jobcards" as PanelType,
+      title: "ACTIVE JOBCARDS",
+      icon: ClipboardList
+    }
+  ];
+
+  const cards = chatType === "work" ? workCards : employeeCards;
+
+  return (
+    <div className="flex-1 px-6 py-10 md:py-16 flex flex-col justify-center items-center select-none w-full max-w-4xl mx-auto scrollbar-none animate-fade-in">
+      {/* Centered Glowing Orb */}
+      <div className="relative w-32 h-32 flex items-center justify-center mb-6">
+        {/* Ambient Pulsing Glow behind the orb */}
+        <div className={`absolute w-24 h-24 rounded-full blur-3xl opacity-50 transition-all duration-700 animate-pulse ${
+          theme === "dark" 
+            ? "bg-white/30" 
+            : "bg-violet-500/30"
+        }`} />
+        
+        {/* Core solid styled orb */}
+        <div className={`w-[60px] h-[60px] rounded-full flex items-center justify-center transition-all duration-500 relative z-10 ${
+          theme === "dark"
+            ? "bg-white shadow-[0_0_45px_15px_rgba(255,255,255,0.4)] border-[5px] border-black"
+            : "bg-[#7c3aed] shadow-[0_0_40px_15px_rgba(124,58,237,0.35)]"
+        }`}>
+          {theme === "dark" && (
+            <div className="w-4 h-4 rounded-full bg-black" />
+          )}
+        </div>
+      </div>
+
+      {/* Main greeting header matching the screenshot */}
+      <h2 className={`text-[26px] sm:text-[32px] font-extrabold tracking-tight text-center mb-8 font-sans transition-colors duration-500 ${
+        theme === "dark" ? "text-white" : "text-[#000000]"
+      }`}>
+        How can I assist you today?
+      </h2>
+
+      {/* Sugestion Pill buttons matching screenshot precisely */}
+      <div className="flex flex-wrap justify-center gap-4 w-full max-w-3xl">
+        {cards.map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <motion.button
+              key={card.id || idx}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.05, duration: 0.25 }}
+              onClick={() => onNavToPanel(card.id)}
+              className={`group flex items-center justify-center gap-3 px-6 py-3.5 rounded-[22px] border transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
+                theme === "dark"
+                  ? "bg-black border-zinc-800 text-white hover:bg-zinc-950 hover:border-zinc-700"
+                  : "bg-white border-[#eaecef] text-[#000000] hover:border-violet-300/80 hover:bg-neutral-50"
+              }`}
+            >
+              <Icon size={16} strokeWidth={2.5} className={`transition-colors duration-300 ${
+                theme === "dark" ? "text-white group-hover:text-zinc-300" : "text-[#7c3aed]"
+              }`} />
+              <span className="text-[12px] font-extrabold tracking-wider uppercase font-sans">
+                {card.title}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Login Screen ─────────────────────────────────────────────────────────────
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -7111,9 +7228,13 @@ function LoginScreen({ onLoginSuccess, theme, setTheme }: LoginScreenProps) {
 
   return (
     <div 
-      className={`flex h-screen w-full overflow-hidden ${theme === "dark" ? "dark bg-[#050505]" : "bg-[#f8f9fa] bg-background"} text-foreground relative`}
+      className={`flex h-screen w-full overflow-hidden transition-colors duration-500 relative ${
+        theme === "dark" ? "bg-[#050505] text-neutral-100" : "bg-[#f8f9fa] text-[#0a0a0d]"
+      }`}
       style={{
-        backgroundImage: theme === "dark" ? 'radial-gradient(ellipse at 50% -20%, rgba(30, 40, 60, 0.35), transparent 70%)' : 'none'
+        backgroundImage: theme === "dark" 
+          ? 'radial-gradient(ellipse at 50% -20%, rgba(30, 40, 60, 0.35), transparent 70%)' 
+          : 'none'
       }}
     >
       {/* Subtle stripe pattern background overlay for dark theme */}
@@ -7125,25 +7246,47 @@ function LoginScreen({ onLoginSuccess, theme, setTheme }: LoginScreenProps) {
       )}
 
       {/* Left side panel: NEXA wide serif logo and version log */}
-      <div className="w-[43%] hidden md:flex flex-col justify-center items-center bg-[#eaecef] dark:bg-[#0a0a0c] border-r border-[#e4e4e7] dark:border-zinc-800/85 relative select-none h-full shrink-0 z-10 transition-colors duration-300">
-        <h1 className="text-[64px] font-[200] tracking-[0.55em] text-[#0a0a0d] dark:text-neutral-100 uppercase font-serif pl-[0.55em] drop-shadow-sm">NEXA</h1>
-        <div className="absolute bottom-6 left-10 text-[11px] font-[500] tracking-wider text-[#71717a] dark:text-zinc-500 flex gap-5 font-sans uppercase">
+      <div 
+        className={`w-[43%] hidden md:flex flex-col justify-center items-center border-r relative select-none h-full shrink-0 z-10 transition-all duration-500 ${
+          theme === "dark" 
+            ? "bg-[#0c0c0e] border-[#1f1f23]" 
+            : "bg-[#f8f9fa] border-[#e4e4e7]"
+        }`}
+      >
+        <h1 className={`text-[64px] font-[200] tracking-[0.55em] uppercase font-serif pl-[0.55em] drop-shadow-sm transition-colors duration-500 ${
+          theme === "dark" ? "text-white" : "text-black"
+        }`}>
+          NEXA
+        </h1>
+        <div className={`absolute bottom-6 left-10 text-[11px] font-[500] tracking-wider flex gap-5 font-sans uppercase transition-colors duration-500 ${
+          theme === "dark" ? "text-zinc-500" : "text-zinc-650"
+        }`}>
           <span>Version : 16.4</span>
-          <span className="text-[#a1a1aa]/30 dark:text-zinc-800">|</span>
+          <span className={theme === "dark" ? "text-zinc-800" : "text-zinc-300"}>|</span>
           <span>Mode: LIVE</span>
         </div>
       </div>
 
       {/* Right side panel: Login action container */}
-      <div className="flex-1 flex flex-col justify-center items-center bg-white dark:bg-transparent p-8 md:p-16 relative h-full min-w-0 z-10 transition-colors duration-300">
+      <div 
+        className={`flex-1 flex flex-col justify-center items-center p-8 md:p-16 relative h-full min-w-0 z-10 transition-all duration-500 ${
+          theme === "dark" ? "bg-[#050505]" : "bg-white"
+        }`}
+      >
         {/* Top Header */}
         <div className="absolute top-6 right-10 flex items-center gap-6 z-20">
-          <span className="text-[11px] text-[#71717a] dark:text-zinc-500 font-sans select-none hidden sm:inline">
+          <span className={`text-[11px] font-sans select-none hidden sm:inline transition-colors duration-500 ${
+            theme === "dark" ? "text-zinc-500" : "text-zinc-550"
+          }`}>
             Designed & Developed by <span className="font-bold text-[#F26522]">global360</span>
           </span>
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="w-8 h-8 rounded-full border border-[#e4e4e7] dark:border-zinc-800 flex items-center justify-center bg-transparent hover:bg-neutral-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer text-[#71717a] dark:text-zinc-400 hover:text-[#0a0a0d] dark:hover:text-zinc-100 shadow-sm"
+            className={`w-8 h-8 rounded-full border flex items-center justify-center bg-transparent transition-all duration-300 cursor-pointer shadow-sm ${
+              theme === "dark" 
+                ? "border-zinc-800 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100" 
+                : "border-[#e4e4e7] text-zinc-600 hover:bg-neutral-100 hover:text-black"
+            }`}
             title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
           >
             {theme === "dark" ? <Sun size={15} className="text-[#FACC15]" /> : <Moon size={15} />}
@@ -7151,40 +7294,66 @@ function LoginScreen({ onLoginSuccess, theme, setTheme }: LoginScreenProps) {
         </div>
 
         {/* Profile Avatar */}
-        <div className="w-24 h-24 rounded-full bg-[#EAECEF]/70 dark:bg-[#0a0a0c] flex items-center justify-center mb-8 border border-[#e4e4e7]/55 dark:border-zinc-800/80 shadow-sm transition-all hover:scale-[1.03] duration-300">
-          <User size={38} className="text-[#71717a] dark:text-zinc-400" strokeWidth={1.5} />
+        <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-8 border shadow-sm transition-all hover:scale-[1.03] duration-500 ${
+          theme === "dark" 
+            ? "bg-[#0c0c0e] border-zinc-800/80 text-zinc-300" 
+            : "bg-white border-neutral-350 text-black"
+        }`}>
+          <User size={38} className={`transition-colors duration-500 ${theme === "dark" ? "text-zinc-300" : "text-black"}`} strokeWidth={1.5} />
         </div>
 
         {/* Form elements */}
         <div className="w-full max-w-sm space-y-5">
           <div className="space-y-1.5">
-            <label className="block text-[12.5px] font-[500] text-neutral-500 dark:text-zinc-400 ml-1 font-sans">User ID</label>
+            <label className={`block text-[12.5px] font-[600] ml-1 font-sans tracking-wide transition-colors duration-500 ${
+              theme === "dark" ? "text-zinc-400" : "text-zinc-700"
+            }`}>
+              User ID
+            </label>
             <input 
               type="text" 
               value={userId} 
               onChange={e => setUserId(e.target.value)}
-              className="w-full px-4 py-3 bg-white dark:bg-[#0c0c0e]/80 border border-neutral-300 dark:border-zinc-800 rounded-xl outline-none focus:border-neutral-500 dark:focus:border-zinc-700 text-[14px] text-foreground font-sans transition-all font-semibold shadow-sm focus:ring-1 focus:ring-zinc-800" 
+              className={`w-full px-4 py-3 border rounded-xl outline-none text-[14px] font-sans transition-all font-semibold shadow-sm focus:ring-1 ${
+                theme === "dark" 
+                  ? "bg-[#0c0c0e] border-zinc-800 text-white focus:border-zinc-600 focus:ring-zinc-700" 
+                  : "bg-white border-neutral-350 text-black focus:border-[#7c3aed] focus:ring-[#7c3aed]/10"
+              }`} 
             />
           </div>
           <div className="space-y-1.5">
-            <label className="block text-[12.5px] font-[500] text-neutral-500 dark:text-zinc-400 ml-1 font-sans">Password</label>
+            <label className={`block text-[12.5px] font-[600] ml-1 font-sans tracking-wide transition-colors duration-500 ${
+              theme === "dark" ? "text-zinc-400" : "text-zinc-700"
+            }`}>
+              Password
+            </label>
             <input 
               type="password" 
               value={password} 
               onChange={e => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white dark:bg-[#0c0c0e]/80 border border-neutral-300 dark:border-zinc-800 rounded-xl outline-none focus:border-neutral-500 dark:focus:border-zinc-700 text-[14px] text-foreground font-sans transition-all font-semibold shadow-sm focus:ring-1 focus:ring-zinc-800" 
+              className={`w-full px-4 py-3 border rounded-xl outline-none text-[14px] font-sans transition-all font-semibold shadow-sm focus:ring-1 ${
+                theme === "dark" 
+                  ? "bg-[#0c0c0e] border-zinc-800 text-white focus:border-zinc-600 focus:ring-zinc-700" 
+                  : "bg-white border-neutral-350 text-black focus:border-[#7c3aed] focus:ring-[#7c3aed]/10"
+              }`} 
             />
           </div>
           <button 
             onClick={onLoginSuccess}
-            className="w-full bg-black hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-100 text-white font-bold py-3.5 px-6 rounded-full text-[12.5px] tracking-[0.2em] uppercase transition-all shadow-md active:scale-95 cursor-pointer mt-2"
+            className={`w-full font-bold py-3.5 px-6 rounded-full text-[12.5px] tracking-[0.2em] uppercase transition-all shadow-md active:scale-95 cursor-pointer mt-2 ${
+              theme === "dark" 
+                ? "bg-white text-black hover:bg-neutral-100" 
+                : "bg-black text-white hover:bg-neutral-800"
+            }`}
           >
             LOGIN
           </button>
         </div>
 
         {/* Brand identity footer */}
-        <div className="absolute bottom-6 right-10 text-[10.5px] font-mono tracking-tight text-neutral-400 dark:text-zinc-650 select-none">
+        <div className={`absolute bottom-6 right-10 text-[10.5px] font-mono tracking-tight select-none transition-colors duration-500 ${
+          theme === "dark" ? "text-zinc-705" : "text-neutral-400"
+        }`}>
           UDID: 4B8CF526-786D-4B0B-9383-626BA7062213
         </div>
       </div>
@@ -7223,12 +7392,11 @@ export default function App() {
   const [dbSessions, setDbSessions] = useState<any[]>([])
 
   async function refreshSessionsList() {
-    if (!isFirebaseEnabled()) return
     try {
       const realSessions = await fetchChatSessions()
       setDbSessions(realSessions)
     } catch (err) {
-      console.error("Failed to load chat history sessions from Firestore:", err)
+      console.error("Failed to load chat history sessions:", err)
     }
   }
 
@@ -7238,18 +7406,18 @@ export default function App() {
       if (isFirebaseEnabled()) {
         try {
           await ensureAuth()
-          await refreshSessionsList()
         } catch (err) {
           console.error("Firebase init failed:", err)
         }
       }
+      // Always reload sessions from our unified persistence layer
+      await refreshSessionsList()
     }
     initFirebaseAndLoad()
   }, [authenticated])
 
   // Helper to persist a single message to Firestore during active runtime sessions
   async function persistMessage(msg: Message, customSessionLabel?: string) {
-    if (!isFirebaseEnabled()) return
     try {
       let currentSessId = activeSessionIdRef.current
       const isJcCompleted = msg.jcStepCode === "COMPLETED" || (jcSession && jcSession.step === "COMPLETED");
@@ -7272,7 +7440,7 @@ export default function App() {
       // Save message document inside subcollection
       await saveChatMessage(currentSessId, msg)
     } catch (err) {
-      console.error("Failed to save session/message to Firebase:", err)
+      console.error("Failed to save session/message persistence:", err)
     }
   }
 
@@ -7517,6 +7685,11 @@ export default function App() {
       promisedDateTime: "Tomorrow 5 PM",
       paymentMode: "Card",
     };
+    
+    // Assign session ID immediately to transition UI smoothly
+    const localSessId = "sess_local_" + Date.now().toString();
+    updateActiveSessionId(localSessId);
+
     setJcSession(initialSession);
     setTyping(true);
     setTimeout(() => {
@@ -8014,6 +8187,11 @@ export default function App() {
     if (activeChatType !== "work") {
       setActiveDashPanel(id)
       setActiveDashPanelData(data)
+    } else {
+      if (id !== "jc-opening") {
+        setActiveWorkPanel(id)
+        setActiveWorkPanelData(data)
+      }
     }
   }
 
@@ -8061,7 +8239,7 @@ export default function App() {
     ...CHAT_HISTORY.map(h => ({ ...h, isDb: false, chatType: h.chatType || "work" }))
   ];
 
-  const showWelcome = messages.length === 0 && view === "chat"
+  const showWelcome = messages.length === 0 && view === "chat" && activeChatType !== "work"
 
   if (!authenticated) {
     return <LoginScreen onLoginSuccess={() => setAuthenticated(true)} theme={theme} setTheme={setTheme} />
@@ -8369,7 +8547,7 @@ export default function App() {
                         transition={{ duration: 0.25 }} className="flex-1 flex flex-col min-h-0">
                         <WelcomeScreen onNavToPanel={(id) => {
                           handleQuickAction(id);
-                        }} chatType={activeChatType} />
+                        }} chatType={activeChatType} theme={theme} />
                       </motion.div>
                     ) : (
                       <motion.div key="messages" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
