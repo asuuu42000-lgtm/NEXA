@@ -1,7 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
 
 let app: any = null;
 let db: any = null;
@@ -9,10 +8,16 @@ let auth: any = null;
 let hasConfiguredFirebase = false;
 
 // Safe check to verify keys exist before initializing, avoiding start-up crashes
-if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
+const firebaseConfig = {
+  apiKey: process.env.VITE_FIREBASE_API_KEY || (typeof window !== 'undefined' ? (window as any).FIREBASE_API_KEY : undefined),
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID || (typeof window !== 'undefined' ? (window as any).FIREBASE_PROJECT_ID : undefined),
+  firestoreDatabaseId: process.env.VITE_FIREBASE_DATABASE_ID || "(default)",
+};
+
+if (firebaseConfig.apiKey && firebaseConfig.projectId) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    db = getFirestore(app, firebaseConfig.firestoreDatabaseId || "(default)");
+    db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
     auth = getAuth(app);
     hasConfiguredFirebase = true;
   } catch (error) {
