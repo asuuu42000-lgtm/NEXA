@@ -7710,12 +7710,14 @@ export default function App() {
     };
     
     // Assign session ID immediately to transition UI smoothly
-    const localSessId = "sess_local_" + Date.now().toString();
-    activeSessionIdRef.current = localSessId;
-    updateActiveSessionId(localSessId);
-    
-    await saveChatSession(localSessId, "Job Card Setup: " + (regInput || "New"), activeChatType, false);
-    await refreshSessionsList();
+    let localSessId = activeSessionIdRef.current;
+    if (!localSessId) {
+      localSessId = "sess_local_" + Date.now().toString();
+      activeSessionIdRef.current = localSessId;
+      updateActiveSessionId(localSessId);
+      await saveChatSession(localSessId, "Job Card Setup: " + (regInput || "New"), activeChatType, false);
+      await refreshSessionsList();
+    }
 
     setJcSession(initialSession);
     setTyping(true);
@@ -7995,51 +7997,56 @@ export default function App() {
   async function processChatMessage(trimmed: string) {
     const upperText = trimmed.toUpperCase();
     
-    // Check if user is asking to add or open a job card
-    if (
-      upperText.includes("ADD JOB CARD") || 
-      upperText.includes("OPEN JOB CARD") || 
-      upperText.includes("NEW JOB CARD") || 
-      upperText.includes("CREATE JOB CARD") || 
-      upperText.includes("ADD JC") || 
-      upperText.includes("OPEN JC") ||
-      upperText.includes("JOB CARD PROCESS")
-    ) {
-      // Find reg number inside prompt
-      const regMatch = trimmed.match(/[A-Za-z]{2}\d{1,2}[A-Za-z]{1,2}\d{4}/) || trimmed.match(/DL6CR1517/i) || trimmed.match(/HR26DS6144/i) || trimmed.match(/HR26CW7677/i);
-      const regNoVal = regMatch ? regMatch[0].toUpperCase() : "";
-      
-      startChatJCOpening(regNoVal);
-      return;
-    }
+    if (activeChatType === "work") {
+      const isAskingForSteps = upperText.includes("STEP") || upperText.includes("HOW TO") || upperText.includes("HELP") || upperText.includes("GUIDE") || upperText.includes("PROCESS") || upperText.includes("TELL ME");
 
-    // Check if user is asking for vehicle history
-    if (
-      upperText.includes("VEHICLE HISTORY") || 
-      upperText.includes("CAR HISTORY") || 
-      upperText.includes("CHECK HISTORY") || 
-      upperText.includes("PAST RECORDS") ||
-      upperText.includes("VEHICLE RECORD")
-    ) {
-      const regMatch = trimmed.match(/[A-Za-z]{2}\d{1,2}[A-Za-z]{1,2}\d{4}/) || trimmed.match(/DL6CR1517/i) || trimmed.match(/HR26DS6144/i) || trimmed.match(/HR26CW7677/i);
-      const regNoVal = regMatch ? regMatch[0].toUpperCase() : "DL6CR1517"; // default to valid history reg
-      
-      const responseText = `Searching databases... Found past history files for vehicle **${regNoVal}**. Displaying comprehensive workshop logs now.`;
-      
-      setTimeout(() => {
-        setTyping(false);
-        addBotMessageSync(responseText, "vehicle-history", { regNo: regNoVal });
+      // Check if user is asking to add or open a job card
+      if (
+        !isAskingForSteps && (
+        upperText.includes("ADD JOB CARD") || 
+        upperText.includes("OPEN JOB CARD") || 
+        upperText.includes("NEW JOB CARD") || 
+        upperText.includes("CREATE JOB CARD") || 
+        upperText.includes("ADD JC") || 
+        upperText.includes("OPEN JC"))
+      ) {
+        // Find reg number inside prompt
+        const regMatch = trimmed.match(/[A-Za-z]{2}\d{1,2}[A-Za-z]{1,2}\d{4}/) || trimmed.match(/DL6CR1517/i) || trimmed.match(/HR26DS6144/i) || trimmed.match(/HR26CW7677/i);
+        const regNoVal = regMatch ? regMatch[0].toUpperCase() : "";
         
-        // Hands-free Navigation Transition
-        setActiveDashPanel("vehicle-history");
-        setActiveDashPanelData({ regNo: regNoVal });
-        setView("dashboard");
+        startChatJCOpening(regNoVal);
+        return;
+      }
 
-        if (speakResponses) {
-          speakText(responseText.replace(/\*\*/g, ""));
-        }
-      }, 700);
-      return;
+      // Check if user is asking for vehicle history
+      if (
+        !isAskingForSteps && (
+        upperText.includes("VEHICLE HISTORY") || 
+        upperText.includes("CAR HISTORY") || 
+        upperText.includes("CHECK HISTORY") || 
+        upperText.includes("PAST RECORDS") ||
+        upperText.includes("VEHICLE RECORD"))
+      ) {
+        const regMatch = trimmed.match(/[A-Za-z]{2}\d{1,2}[A-Za-z]{1,2}\d{4}/) || trimmed.match(/DL6CR1517/i) || trimmed.match(/HR26DS6144/i) || trimmed.match(/HR26CW7677/i);
+        const regNoVal = regMatch ? regMatch[0].toUpperCase() : "DL6CR1517"; // default to valid history reg
+        
+        const responseText = `Searching databases... Found past history files for vehicle **${regNoVal}**. Displaying comprehensive workshop logs now.`;
+        
+        setTimeout(() => {
+          setTyping(false);
+          addBotMessageSync(responseText, "vehicle-history", { regNo: regNoVal });
+          
+          // Hands-free Navigation Transition
+          setActiveDashPanel("vehicle-history");
+          setActiveDashPanelData({ regNo: regNoVal });
+          setView("dashboard");
+
+          if (speakResponses) {
+            speakText(responseText.replace(/\*\*/g, ""));
+          }
+        }, 700);
+        return;
+      }
     }
 
     try {
