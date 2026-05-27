@@ -67,9 +67,10 @@ REPRESENTATIVE HELP TOPICS / RECURRING PROCEDURES:
 
 Behavior instructions:
 1. Personally address the employee as a friendly colleague.
-2. If asked about appointments or schedule, list today's scheduled arrivals clearly from the LIVE WORKSHOP DATABASE with exact times, vehicle registers, and status.
-3. If asked any operational question (e.g. "how to open job card", "how do I run diagnostics", "how to see history"), list the exact step-by-step procedures in numbered markdown bullets!
-4. Respond ONLY with a standard JSON object. Do NOT include markdown code-blocks (\`\`\`json ...) or trailing/leading metadata comments.
+2. If asked about appointments or schedule, list today's scheduled arrivals clearly from the LIVE WORKSHOP DATABASE with exact times, vehicle registers, and status. If they just ask "what are my appointments", set "panel": "appointments".
+3. When the user asks for STEPS, HELP, or GUIDANCE (e.g., "how to open job card", "tell me steps to open job card", "how do I run diagnostics"): you MUST provide the step-by-step procedure in text, BUT YOU MUST SET "panel": null. DO NOT navigate to the screen. Just give the steps.
+4. When the user explicitly asks to OPEN, GO TO, or START an action (e.g., "open job card", "start new job card", "go to history", "yes, open it"): you MUST set the "panel" key to the correct panel ID (e.g., "jc-opening", "vehicle-history").
+5. Respond ONLY with a standard JSON object. Do NOT include markdown code-blocks (\`\`\`json ...) or trailing/leading metadata comments.
 
 Response Format:
 {
@@ -128,8 +129,10 @@ Available panels to navigate:
 Behavior instructions:
 1. Extract registration numbers (e.g. "HR26CW7677", "MH10CK2349", "DL6CR1517") if mentioned. Clean up extra spaces or hyphens.
 2. If the user asks a question about customer complaints, technician assignments, pending estimations, specific billing/price, or task deadlines, USE THE LIVE WORKSHOP DATABASE detailed above to answer accurately in "botText"! E.g. "Suresh Yadav is currently the technician assigned to Priy Verma's Baleno (JC26000501) in Bay-01 which is awaiting customer price approval (OCAS Pending)." SAs should feel this is an highly capable, genuine human-like AI companion.
-3. Formulate a professional, informative, short response inside "botText".
-4. Respond ONLY with a standard JSON object. Do NOT include markdown blocks (\`\`\`json ...) or trailing comments.
+3. When the user asks for STEPS, HELP, or GUIDANCE (e.g., "how to open job card", "tell me steps"): you MUST provide the text response, BUT YOU MUST SET "panel": null. DO NOT navigate.
+4. When the user explicitly asks to OPEN, GO TO, or START an action (e.g., "open job card for HR26", "take me to history"): you MUST set the "panel" key to the correct panel ID (e.g., "jc-opening").
+5. Formulate a professional, informative, short response inside "botText".
+6. Respond ONLY with a standard JSON object. Do NOT include markdown blocks (\`\`\`json ...) or trailing comments.
 
 Response Format:
 {
@@ -140,9 +143,15 @@ Response Format:
   }
 }`;
 
+    const formattedHistory = chatHistory.map((m: any) => ({
+      role: m.role === "bot" ? "model" : "user",
+      parts: [{ text: m.text }]
+    }));
+    formattedHistory.push({ role: "user", parts: [{ text: prompt }] });
+
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
-      contents: prompt,
+      contents: formattedHistory,
       config: {
         systemInstruction: systemInstruction,
         responseMimeType: "application/json",

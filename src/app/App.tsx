@@ -379,10 +379,10 @@ function priorityColor(p: string) {
 
 function notifStyle(type: string) {
   const styles: Record<string, { border: string; icon: string; bg: string }> = {
-    urgent: { border: "border-l-[#F87171]", icon: "text-[#F87171]", bg: "bg-[#2A0D0D]/40" },
-    warning: { border: "border-l-[#FACC15]", icon: "text-[#FACC15]", bg: "bg-[#2A1A0D]/40" },
-    success: { border: "border-l-[#4ADE80]", icon: "text-[#4ADE80]", bg: "bg-[#0D2E1A]/40" },
-    info: { border: "border-l-[#3D8EF0]", icon: "text-primary", bg: "bg-[#0D1626]/40" },
+    urgent: { border: "border-l-[#ef4444]", icon: "text-[#ef4444]", bg: "bg-card hover:bg-muted/50" },
+    warning: { border: "border-l-[#eab308]", icon: "text-[#eab308]", bg: "bg-card hover:bg-muted/50" },
+    success: { border: "border-l-[#22c55e]", icon: "text-[#22c55e]", bg: "bg-card hover:bg-muted/50" },
+    info: { border: "border-l-[#3b82f6]", icon: "text-[#3b82f6]", bg: "bg-card hover:bg-muted/50" },
   }
   return styles[type] || styles.info
 }
@@ -587,7 +587,34 @@ function AppointmentsPanel({ onAction }: { onAction: (a: PanelType, data?: Recor
     const matchesSearch = a.regNo.toLowerCase().includes(search.toLowerCase()) ||
                           a.model.toLowerCase().includes(search.toLowerCase())
     const appDate = a.date || "2026-04-16"
-    return matchesSearch && appDate === selectedDate
+    
+    let inRange = false;
+    if (view === "DAY") {
+      inRange = appDate === selectedDate;
+    } else if (view === "MONTH") {
+      const sParts = selectedDate.split("-");
+      const aParts = appDate.split("-");
+      if (sParts.length === 3 && aParts.length === 3) {
+        inRange = sParts[0] === aParts[0] && sParts[1] === aParts[1];
+      } else {
+        inRange = appDate === selectedDate;
+      }
+    } else if (view === "WEEK") {
+      const sParts = selectedDate.split("-");
+      const aParts = appDate.split("-");
+      if (sParts.length === 3 && aParts.length === 3) {
+        const sTime = Date.UTC(parseInt(sParts[0]), parseInt(sParts[1]) - 1, parseInt(sParts[2]));
+        const aTime = Date.UTC(parseInt(aParts[0]), parseInt(aParts[1]) - 1, parseInt(aParts[2]));
+        const sDayOfWeek = new Date(sTime).getUTCDay();
+        const startOfWeekTime = sTime - sDayOfWeek * 86400000;
+        const endOfWeekTime = startOfWeekTime + 6 * 86400000;
+        inRange = aTime >= startOfWeekTime && aTime <= endOfWeekTime;
+      } else {
+        inRange = appDate === selectedDate;
+      }
+    }
+
+    return matchesSearch && inRange
   })
 
   const handleAddSubmit = (e: React.FormEvent) => {
@@ -3691,7 +3718,7 @@ function CloseJobCardPanel({
                               }
                             }} 
                           />
-                          <Upload size={14} className="text-secondary" />
+                          <Upload size={14} className="opacity-70" />
                           <span className="text-[9px] font-black uppercase text-foreground leading-tight">Upload Video</span>
                         </label>
                         
@@ -5589,7 +5616,7 @@ function JCChatStepRenderer({
               }}
               className="px-3.5 py-2 bg-card hover:bg-muted border border-border text-[12px] font-bold rounded-lg text-foreground font-sans flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <Camera size={13} className="text-secondary" /> Scan
+              <Camera size={13} /> Scan
             </button>
           </div>
           <button
@@ -5908,7 +5935,7 @@ function JCChatStepRenderer({
               {/* Interior Snaps mock */}
               <div className="border-t border-border pt-2 flex justify-between items-center text-[11.5px]">
                 <div className="flex items-center gap-1.5">
-                  <Camera size={14} className="text-secondary" />
+                  <Camera size={14} />
                   <span>Cabin Interior Snaps (Dashboard / Seat / Boot)</span>
                 </div>
                 <span className="text-[10px] bg-card border border-border text-secondary font-bold px-2 py-0.5 rounded font-mono">3 / 3 LOGGED</span>
@@ -6304,7 +6331,7 @@ function JCChatStepRenderer({
             ) : (
               <div className="h-24 bg-card border border-secondary/25 rounded-xl relative flex justify-center items-center overflow-hidden">
                 {/* SVG mock signature line */}
-                <svg className="w-48 h-12 stroke-secondary stroke-2 fill-none animate-pulse">
+                <svg className="w-48 h-12 stroke-foreground stroke-2 fill-none animate-pulse">
                   <path d="M10,25 Q30,5 50,25 T90,25 T130,10 T170,25" />
                 </svg>
                 <button
@@ -6648,9 +6675,9 @@ function BotBubble({
                       }
                     }
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-white bg-card/35 hover:bg-card/70 border border-border hover:border-border rounded-lg transition-all cursor-pointer shadow-md select-none"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground bg-card/35 hover:bg-card/70 border border-border hover:border-border rounded-lg transition-all cursor-pointer shadow-md select-none"
                 >
-                  <ChevronLeft size={13} className="text-muted-foreground" />
+                  <ChevronLeft size={13} className="shrink-0" />
                   Back to previous step ({FRIENDLY_STEP_LABELS[ALL_JC_STEPS[ALL_JC_STEPS.indexOf(jcStepCode) - 1]] || ""})
                 </button>
               </div>
@@ -6772,7 +6799,7 @@ function DashboardView({ onTileClick, onReturnToChat, theme, setTheme }: { onTil
               className="hover:text-foreground transition-colors cursor-pointer flex items-center justify-center"
               title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
             >
-              {theme === "dark" ? <Sun size={18} strokeWidth={1.5} className="text-[#FACC15]" /> : <Moon size={18} strokeWidth={1.5} />}
+              {theme === "dark" ? <Sun size={18} strokeWidth={1.5} className="text-[#FACC15]" /> : <Moon size={18} strokeWidth={1.5} className="text-black dark:text-white" />}
             </button>
 
             {/* Logout Button */}
@@ -7285,11 +7312,11 @@ function LoginScreen({ onLoginSuccess, theme, setTheme }: LoginScreenProps) {
             className={`w-8 h-8 rounded-full border flex items-center justify-center bg-transparent transition-all duration-300 cursor-pointer shadow-sm ${
               theme === "dark" 
                 ? "border-zinc-800 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100" 
-                : "border-[#e4e4e7] text-zinc-600 hover:bg-neutral-100 hover:text-black"
+                : "border-[#e4e4e7] text-black hover:bg-neutral-100"
             }`}
             title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
           >
-            {theme === "dark" ? <Sun size={15} className="text-[#FACC15]" /> : <Moon size={15} />}
+            {theme === "dark" ? <Sun size={15} className="text-[#FACC15]" /> : <Moon size={15} className="text-black dark:text-white" />}
           </button>
         </div>
 
@@ -8019,7 +8046,7 @@ export default function App() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: trimmed, chatType: activeChatType }),
+        body: JSON.stringify({ prompt: trimmed, chatHistory: messages, chatType: activeChatType }),
       });
       const data = await response.json();
       setTyping(false);
@@ -8281,15 +8308,12 @@ export default function App() {
         setActiveWorkPanel(id)
         setActiveWorkPanelData(data)
       }
-    } else if (activeChatType === "employee") {
-      setActiveDashPanel(id)
-      setActiveDashPanelData(data)
     }
   }
 
   function handleTileClick(panel: PanelType) {
-    setView("chat")
-    setTimeout(() => handleQuickAction(panel), 180)
+    setActiveDashPanel(panel)
+    setActiveDashPanelData(undefined)
   }
 
   function handleNewChat() {
@@ -8416,7 +8440,7 @@ export default function App() {
                 className="hover:text-foreground transition-colors cursor-pointer flex items-center justify-center"
                 title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
               >
-                {theme === "dark" ? <Sun size={18} strokeWidth={1.5} className="text-[#FACC15]" /> : <Moon size={18} strokeWidth={1.5} className="text-secondary-foreground" />}
+                {theme === "dark" ? <Sun size={18} strokeWidth={1.5} className="text-[#FACC15]" /> : <Moon size={18} strokeWidth={1.5} className="text-black dark:text-white" />}
               </button>
 
               {/* Logout Button */}
@@ -8798,7 +8822,7 @@ export default function App() {
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-xl mb-3 inline-flex max-w-[280px]">
                           <span className="text-[11px] font-bold text-primary font-sans uppercase shrink-0">{attachedFile.type}:</span>
                           <span className="text-[11.5px] text-foreground truncate font-sans">{attachedFile.name}</span>
-                          <button onClick={() => setAttachedFile(null)} className="text-muted-foreground hover:text-white p-0.5 rounded cursor-pointer shrink-0"><X size={12} /></button>
+                          <button onClick={() => setAttachedFile(null)} className="text-muted-foreground hover:text-foreground p-0.5 rounded cursor-pointer shrink-0"><X size={12} /></button>
                         </div>
                       )}
                       <div className="flex items-center gap-2 bg-card rounded-2xl border border-border focus-within:border-primary/35 transition-all px-4 py-3 shadow-lg shadow-black/20 font-bold">
